@@ -1,6 +1,17 @@
 # Multi-Agent Fire Rescue Simulation
 
+[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://fire-rescue-simulation.onrender.com/)
+[![Python](https://img.shields.io/badge/python-3.11-blue)](https://www.python.org/)
+[![Flask](https://img.shields.io/badge/flask-3.0-lightgrey)](https://flask.palletsprojects.com/)
+[![Mesa](https://img.shields.io/badge/mesa-3.0-orange)](https://mesa.readthedocs.io/)
+
 A sophisticated **Multi-Agent System (MAS)** implementation using Python and the Mesa framework. This interactive web application demonstrates autonomous agent coordination, emergent behavior, and complex problem-solving in a dynamic environment based on the Fire Rescue board game.
+
+## 🌐 Live Demo
+
+**[https://fire-rescue-simulation.onrender.com/](https://fire-rescue-simulation.onrender.com/)**
+
+> Note: The free tier on Render may take ~30 seconds to wake up if the service has been idle.
 
 ## 🤖 System Overview
 
