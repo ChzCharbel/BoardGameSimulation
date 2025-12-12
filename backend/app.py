@@ -32,51 +32,79 @@ class SimulationManager:
         self.is_running = False
         self.auto_step = False
         self.step_delay = 1  # segundos entre pasos automáticos
-        self.logs = []  # Store log messages
-        self.previous_state = None  # Track previous state for change detection
+        self.event_logs = []  # Store event log messages
+        # Track previous state for change detection
+        self.prev_knocked_out = set()
+        self.prev_carrying = {}
+        self.prev_lost_victims = 0
+        self.prev_rescued_victims = 0
+        self.prev_damage = 0
         
-    def add_log(self, message, log_type="info"):
-        """Add a log message with timestamp"""
-        self.logs.append({
-            'message': message,
-            'type': log_type,
-            'round': self.model.round_count,
-            'step': self.model.step_count
-        })
-        # Keep only last 50 logs
-        if len(self.logs) > 50:
-            self.logs = self.logs[-50:]
-    
     def generate_step_logs(self):
-        """Generate logs based on important events only"""
+        """Generate logs only when important events occur (changes from previous state)"""
         logs = []
         
-        # Log knocked out agents
-        for agent in self.model.agent_list:
-            if agent.is_knocked_out():
-                logs.append({
-                    'message': f"⚠️ Agent {agent.unique_id} knocked out! ({agent.knockout_timer} turns remaining)",
-                    'type': 'warning'
-                })
-            elif agent.carrying_victim:
-                logs.append({
-                    'message': f"🚑 Agent {agent.unique_id} carrying victim {agent.carrying_victim.id} to exit",
-                    'type': 'success'
-                })
+        current_knocked_out = set()
+        current_carrying = {}
         
-        # Log lost victims
-        if self.model.lost_victims:
+        for agent in self.model.agent_list:
+            # Track knocked out agents
+            if agent.is_knocked_out():
+                current_knocked_out.add(agent.unique_id)
+                # Only log if newly knocked out
+                if agent.unique_id not in self.prev_knocked_out:
+                    logs.append({
+                        'message': f"⚠️ Agent {agent.unique_id} knocked out by fire!",
+                        'type': 'warning'
+                    })
+            
+            # Track carrying victims
+            if agent.carrying_victim:
+                current_carrying[agent.unique_id] = agent.carrying_victim.id
+                # Only log if just picked up victim
+                if agent.unique_id not in self.prev_carrying:
+                    logs.append({
+                        'message': f"🚑 Agent {agent.unique_id} picked up victim {agent.carrying_victim.id}",
+                        'type': 'success'
+                    })
+        
+        # Check for rescued victims (agent was carrying, now not carrying)
+        for agent_id, victim_id in self.prev_carrying.items():
+            if agent_id not in current_carrying:
+                # Agent dropped victim - check if rescued
+                if len(self.model.rescued_victims) > self.prev_rescued_victims:
+                    logs.append({
+                        'message': f"✅ Victim {victim_id} rescued by Agent {agent_id}!",
+                        'type': 'success'
+                    })
+        
+        # Log lost victims (only when count increases)
+        if len(self.model.lost_victims) > self.prev_lost_victims:
+            new_lost = len(self.model.lost_victims) - self.prev_lost_victims
             logs.append({
-                'message': f"❌ Victim lost! Total: {len(self.model.lost_victims)}/4",
+                'message': f"❌ {new_lost} victim(s) lost to fire! ({len(self.model.lost_victims)}/4)",
                 'type': 'danger'
             })
         
-        # Log structural damage
-        if self.model.damage_count > 0:
+        # Log structural damage (only when increases)
+        if self.model.damage_count > self.prev_damage:
+            new_damage = self.model.damage_count - self.prev_damage
             logs.append({
-                'message': f"🏚️ Wall damaged! Total damage: {self.model.damage_count}/24",
+                'message': f"🏚️ Wall damaged! (+{new_damage}, total: {self.model.damage_count}/24)",
                 'type': 'warning' if self.model.damage_count < 18 else 'danger'
             })
+        
+        # Update previous state
+        self.prev_knocked_out = current_knocked_out
+        self.prev_carrying = current_carrying
+        self.prev_lost_victims = len(self.model.lost_victims)
+        self.prev_rescued_victims = len(self.model.rescued_victims)
+        self.prev_damage = self.model.damage_count
+        
+        # Add to persistent log history
+        self.event_logs.extend(logs)
+        if len(self.event_logs) > 50:
+            self.event_logs = self.event_logs[-50:]
         
         return logs
         
