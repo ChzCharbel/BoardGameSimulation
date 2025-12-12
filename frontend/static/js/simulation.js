@@ -99,9 +99,23 @@ async function createNewSimulation() {
     const data = await response.json();
 
     if (data.simulation_id) {
+      // Leave old simulation room if exists
+      if (simulationId && socket) {
+        socket.emit("leave_simulation", { simulation_id: simulationId });
+      }
+      
       simulationId = data.simulation_id;
       // Actualizar URL sin recargar la página
       history.pushState(null, "", `/simulation?id=${simulationId}`);
+      
+      // Join new simulation room for WebSocket updates
+      if (socket) {
+        socket.emit("join_simulation", { simulation_id: simulationId });
+      }
+      
+      // Reset auto running state
+      autoRunning = false;
+      
       updateDisplay(data.state);
     } else {
       alert("Error al crear la simulación");
@@ -349,9 +363,11 @@ function createAgentElement(agent, index, currentAgentIndex) {
   agentElement.style.top = `${2 + Math.floor(index / 2) * 14}px`;
 
   // Rol del agente
-  if (agent.role === "RESCUER") {
+  if (agent.carrying_victim) {
+    agentElement.classList.add("carrying");
+  } else if (agent.role === "rescuer") {
     agentElement.classList.add("rescuer");
-  } else if (agent.role === "EXTINGUISHER") {
+  } else if (agent.role === "extinguisher") {
     agentElement.classList.add("extinguisher");
   }
 
@@ -378,9 +394,9 @@ function createPOIElement(poi) {
   poiElement.className = "poi";
   poiElement.textContent = poi.id;
 
-  if (poi.type === "VICTIM") {
+  if (poi.type === "victim") {
     poiElement.classList.add("victim");
-  } else if (poi.type === "FALSE") {
+  } else if (poi.type === "false") {
     poiElement.classList.add("false");
   }
 

@@ -185,6 +185,10 @@ body {
   background-color: #dc3545;
 }
 
+.agent.carrying {
+  background-color: #28a745;
+}
+
 .agent.knocked-out {
   background-color: #666;
   opacity: 0.5;

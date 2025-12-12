@@ -220,6 +220,12 @@ def delete_simulation(simulation_id):
 @socketio.on('join_simulation')
 def on_join_simulation(data):
     simulation_id = data['simulation_id']
+    
+    # Leave old room if exists
+    old_simulation_id = session.get('simulation_id')
+    if old_simulation_id and old_simulation_id != simulation_id:
+        leave_room(old_simulation_id)
+    
     if simulation_id in active_simulations:
         session['simulation_id'] = simulation_id
         join_room(simulation_id)
@@ -232,14 +238,19 @@ def on_join_simulation(data):
     else:
         emit('error', {'message': 'Simulation not found'})
 
+@socketio.on('leave_simulation')
+def on_leave_simulation(data):
+    simulation_id = data.get('simulation_id')
+    if simulation_id:
+        leave_room(simulation_id)
+        if session.get('simulation_id') == simulation_id:
+            session.pop('simulation_id', None)
+
 @socketio.on('disconnect')
 def on_disconnect():
     simulation_id = session.get('simulation_id')
     if simulation_id:
         leave_room(simulation_id)
-
-@socketio.on('disconnect')
-def on_disconnect():
     print('Client disconnected')
 
 if __name__ == '__main__':
