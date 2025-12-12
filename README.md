@@ -64,11 +64,11 @@ FireRescueModel (Mesa.Model)
 
 Each `FireAgent` implements:
 
-- **State Machine**: Role-based behavior switching
-- **Sensor Model**: Environmental perception and awareness
-- **Decision Trees**: Action prioritization and planning
-- **Pathfinding**: A\* algorithm for optimal navigation
-- **Coordination**: Implicit communication through environment
+- **Role-Based Behavior**: Dynamic switching between RESCUER and EXTINGUISHER roles
+- **Environmental Awareness**: Fire detection, POI tracking, exit navigation
+- **Dijkstra Pathfinding**: Optimal route calculation with wall/door costs
+- **Action Point Management**: 4 AP per turn with cost-aware decision making
+- **Knockout Recovery**: Respawn system after fire exposure (2 turn timer)
 
 ## 🧠 Multi-Agent Implementation
 
@@ -77,48 +77,63 @@ Each `FireAgent` implements:
 ```python
 class FireAgent(Agent):
     def __init__(self, unique_id, model):
-        self.role = None                    # Dynamic role assignment
-        self.action_points = 4             # Resource management
-        self.carrying_victim = None        # State tracking
-        self.knockout_timer = 0            # Agent health system
+        self.action_points = 4              # 4 AP per turn
+        self.role = None                    # RESCUER or EXTINGUISHER
+        self.target_poi = None              # Current POI target
+        self.carrying_victim = None         # Victim being carried
+        self.knockout_timer = 0             # 2-turn knockout system
+        self.path = []                      # Dijkstra-computed path
 
     def step(self):
-        self.assign_role()                 # Dynamic role adaptation
-        self.execute_behavior()            # Role-specific actions
-        self.update_state()                # Internal state management
+        if self.is_knocked_out():           # Check knockout status
+            self.update_knockout()          # Decrement timer, respawn
+            return
+        self.assign_role()                  # Based on environment state
+        if self.role == FireFighterRole.RESCUER:
+            self.rescuer_behavior()         # Find/carry victims to exits
+        else:
+            self.extinguisher_behavior()    # Find and extinguish fires
 ```
 
 ### Emergent Properties
 
 The simulation demonstrates several emergent behaviors:
 
-1. **Self-Organization**: Agents form rescue teams without central coordination
-2. **Load Balancing**: Dynamic role distribution based on environmental needs
-3. **Collective Intelligence**: Group problem-solving exceeds individual capabilities
-4. **Adaptive Behavior**: System responds to changing fire patterns and victim locations
+1. **Dynamic Role Distribution**: Agents switch between RESCUER/EXTINGUISHER based on fire and POI counts
+2. **Decentralized Coordination**: No central controller - agents react to local environment state
+3. **Adaptive Pathfinding**: Routes recalculated when environment changes (fire spread, doors opened)
+4. **Resource Optimization**: Agents balance fire extinguishing vs victim rescue based on AP costs
 
 ## 🔬 Simulation Parameters
 
-| Parameter     | Value          | Description                    |
-| ------------- | -------------- | ------------------------------ |
-| Grid Size     | 8×6 cells      | Spatial environment dimensions |
-| Agent Count   | 6 firefighters | Multi-agent population size    |
-| Action Points | 4 per turn     | Resource constraint per agent  |
-| Fire Spread   | Stochastic     | Dynamic environment changes    |
-| Vision Range  | Adjacent cells | Agent sensory limitations      |
-| Pathfinding   | Dijkstra       | Optimal route calculation      |
+| Parameter        | Value           | Description                              |
+| ---------------- | --------------- | ---------------------------------------- |
+| Grid Size        | 8×6 cells       | Spatial environment dimensions           |
+| Agent Count      | 6 firefighters  | Multi-agent population size              |
+| Action Points    | 4 per turn      | Resource constraint per agent            |
+| POIs             | 10 victims + 5 false alarms | Points of Interest to discover |
+| Victims to Win   | 7 rescued       | Win condition                            |
+| Max Losses       | 4 victims       | Lose condition                           |
+| Max Damage       | 24 structural   | Building collapse threshold              |
+| Knockout Timer   | 2 turns         | Recovery time after fire exposure        |
+| Fire→Smoke Cost  | 1 AP            | Reduce fire to smoke                     |
+| Fire→Clear Cost  | 2 AP            | Fully extinguish fire                    |
+| Move Cost        | 1 AP            | Basic movement                           |
+| Open Door Cost   | 1 AP            | Open closed door                         |
 
 ## 🛠️ Installation & Usage
 
 ### Requirements
 
 ```bash
-Python 3.8+
-Mesa 2.0+
-Flask 3.0+
-Flask-SocketIO 5.3+
+Python 3.11+
+Mesa 3.0.3
+Flask 3.0.0
+Flask-SocketIO 5.3.6
 NumPy 1.24+
 python-dotenv 1.0+
+gunicorn (production)
+gevent-websocket (production)
 ```
 
 ### Quick Start
@@ -254,13 +269,13 @@ MAX_FIREFIGHTERS=6
 VICTIMS_TO_WIN=7
 ```
 
-## 📊 Core Knowledge
+## 📊 Technical Concepts Demonstrated
 
-- **Multi-Agent Coordination**: Studying emergence in distributed systems
-- **Crisis Management**: Modeling emergency response scenarios
-- **Swarm Intelligence**: Collective problem-solving behaviors
-- **Human-AI Interaction**: Mixed human-agent team dynamics
-- **Algorithmic Game Theory**: Agent incentives and cooperation
+- **Agent-Based Modeling**: Using Mesa framework for autonomous agent simulation
+- **Dijkstra Pathfinding**: Optimal route calculation with weighted edges (walls, doors)
+- **Real-time WebSockets**: Flask-SocketIO for live simulation updates
+- **Role-Based AI**: Dynamic behavior switching based on environment state
+- **Multi-Agent Coordination**: Decentralized decision-making without central control
 
 ## 🔍 Troubleshooting
 
