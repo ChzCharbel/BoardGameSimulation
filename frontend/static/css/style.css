@@ -77,86 +77,105 @@ body {
   }
 }
 
-/* Paredes */
-.cell.wall-top::before {
-  content: "";
+/* Paredes - using DOM elements instead of pseudo-elements */
+.wall {
   position: absolute;
+  background-color: #8b4513;
+  z-index: 10;
+}
+
+.wall.wall-top {
   top: -2px;
   left: 0;
   right: 0;
   height: 4px;
-  background-color: #8b4513;
 }
 
-.cell.wall-right::after {
-  content: "";
-  position: absolute;
+.wall.wall-right {
   right: -2px;
   top: 0;
   bottom: 0;
   width: 4px;
-  background-color: #8b4513;
 }
 
-.cell.wall-bottom::before {
-  content: "";
-  position: absolute;
+.wall.wall-bottom {
   bottom: -2px;
   left: 0;
   right: 0;
   height: 4px;
-  background-color: #8b4513;
 }
 
-.cell.wall-left::after {
-  content: "";
-  position: absolute;
+.wall.wall-left {
   left: -2px;
   top: 0;
   bottom: 0;
   width: 4px;
-  background-color: #8b4513;
 }
 
-/* Puertas */
-.cell.door-top::before {
-  content: "";
+/* Damaged walls (1hp) - orange/cracked appearance */
+.wall.wall-damaged.wall-top,
+.wall.wall-damaged.wall-bottom {
+  background: repeating-linear-gradient(
+    90deg,
+    #ff6b35,
+    #ff6b35 4px,
+    #8b4513 4px,
+    #8b4513 8px
+  );
+}
+
+.wall.wall-damaged.wall-right,
+.wall.wall-damaged.wall-left {
+  background: repeating-linear-gradient(
+    0deg,
+    #ff6b35,
+    #ff6b35 4px,
+    #8b4513 4px,
+    #8b4513 8px
+  );
+}
+
+/* Puertas - using DOM elements */
+.door {
   position: absolute;
+  z-index: 10;
+}
+
+.door.door-top {
   top: -2px;
   left: 20px;
   right: 20px;
   height: 4px;
-  background-color: #654321;
 }
 
-.cell.door-right::after {
-  content: "";
-  position: absolute;
+.door.door-right {
   right: -2px;
   top: 20px;
   bottom: 20px;
   width: 4px;
-  background-color: #654321;
 }
 
-.cell.door-bottom::before {
-  content: "";
-  position: absolute;
+.door.door-bottom {
   bottom: -2px;
   left: 20px;
   right: 20px;
   height: 4px;
-  background-color: #654321;
 }
 
-.cell.door-left::after {
-  content: "";
-  position: absolute;
+.door.door-left {
   left: -2px;
   top: 20px;
   bottom: 20px;
   width: 4px;
+}
+
+.door.door-closed {
   background-color: #654321;
+}
+
+.door.door-open {
+  background-color: #a0522d;
+  opacity: 0.5;
 }
 
 /* Agentes */
@@ -451,6 +470,64 @@ pre code {
 .card-header {
   border-radius: 12px 12px 0 0 !important;
   font-weight: 600;
+}
+
+/* Activity Log */
+.activity-log {
+  max-height: 250px;
+  overflow-y: auto;
+  font-size: 0.85rem;
+}
+
+.log-entry {
+  padding: 6px 12px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.log-entry:last-child {
+  border-bottom: none;
+}
+
+.log-entry.phase {
+  background-color: #e3f2fd;
+  font-weight: 600;
+  color: #1565c0;
+}
+
+.log-entry.info {
+  background-color: #fff;
+}
+
+.log-entry.success {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.log-entry.warning {
+  background-color: #fff3e0;
+  color: #ef6c00;
+}
+
+.log-entry.danger {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.log-round {
+  font-size: 0.7rem;
+  background-color: #6c757d;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.log-message {
+  flex: 1;
+  word-break: break-word;
 }
 
 /* Animated icons */

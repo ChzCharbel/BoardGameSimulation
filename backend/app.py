@@ -32,6 +32,53 @@ class SimulationManager:
         self.is_running = False
         self.auto_step = False
         self.step_delay = 1  # segundos entre pasos automáticos
+        self.logs = []  # Store log messages
+        self.previous_state = None  # Track previous state for change detection
+        
+    def add_log(self, message, log_type="info"):
+        """Add a log message with timestamp"""
+        self.logs.append({
+            'message': message,
+            'type': log_type,
+            'round': self.model.round_count,
+            'step': self.model.step_count
+        })
+        # Keep only last 50 logs
+        if len(self.logs) > 50:
+            self.logs = self.logs[-50:]
+    
+    def generate_step_logs(self):
+        """Generate logs based on important events only"""
+        logs = []
+        
+        # Log knocked out agents
+        for agent in self.model.agent_list:
+            if agent.is_knocked_out():
+                logs.append({
+                    'message': f"⚠️ Agent {agent.unique_id} knocked out! ({agent.knockout_timer} turns remaining)",
+                    'type': 'warning'
+                })
+            elif agent.carrying_victim:
+                logs.append({
+                    'message': f"🚑 Agent {agent.unique_id} carrying victim {agent.carrying_victim.id} to exit",
+                    'type': 'success'
+                })
+        
+        # Log lost victims
+        if self.model.lost_victims:
+            logs.append({
+                'message': f"❌ Victim lost! Total: {len(self.model.lost_victims)}/4",
+                'type': 'danger'
+            })
+        
+        # Log structural damage
+        if self.model.damage_count > 0:
+            logs.append({
+                'message': f"🏚️ Wall damaged! Total damage: {self.model.damage_count}/24",
+                'type': 'warning' if self.model.damage_count < 18 else 'danger'
+            })
+        
+        return logs
         
     def get_state(self):
         """Obtener el estado completo de la simulación"""
@@ -93,7 +140,8 @@ class SimulationManager:
                 'fire_count': int(np.sum(self.model.fire_states == FireState.FIRE)),
                 'smoke_count': int(np.sum(self.model.fire_states == FireState.SMOKE)),
                 'clear_count': int(np.sum(self.model.fire_states == FireState.CLEAR))
-            }
+            },
+            'logs': self.generate_step_logs()
         }
     
     def step(self):

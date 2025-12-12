@@ -56,6 +56,9 @@ function setupEventListeners() {
   document
     .getElementById("newGameBtn")
     .addEventListener("click", resetSimulation);
+  document
+    .getElementById("clear-logs-btn")
+    .addEventListener("click", clearActivityLog);
 }
 
 function initializeSocket() {
@@ -115,6 +118,9 @@ async function createNewSimulation() {
       
       // Reset auto running state
       autoRunning = false;
+      
+      // Clear log history for new simulation
+      logHistory = [];
       
       updateDisplay(data.state);
     } else {
@@ -274,6 +280,9 @@ function updateDisplay(state) {
   // Actualizar lista de POIs
   updatePOIsList(state.pois);
 
+  // Actualizar activity log
+  updateActivityLog(state.logs, state.round_count);
+
   // Update control buttons based on current state
   updateControlButtons();
 
@@ -338,17 +347,32 @@ function createCell(x, y, state) {
 
 function addWallClasses(cell, cellData) {
   // cellData es [top, right, bottom, left]
+  // Wall types: 0=none, 1=damaged(1hp), 2=full(2hp), 3=open door, 4=closed door
   const directions = ["top", "right", "bottom", "left"];
 
   cellData.forEach((wallType, index) => {
     const direction = directions[index];
 
-    if (wallType === 1 || wallType === 2) {
-      cell.classList.add(`wall-${direction}`);
+    if (wallType === 2) {
+      // Full wall (2hp)
+      const wallElement = document.createElement("div");
+      wallElement.className = `wall wall-${direction}`;
+      cell.appendChild(wallElement);
+    } else if (wallType === 1) {
+      // Damaged wall (1hp)
+      const wallElement = document.createElement("div");
+      wallElement.className = `wall wall-${direction} wall-damaged`;
+      cell.appendChild(wallElement);
     } else if (wallType === 3) {
-      cell.classList.add(`door-${direction}`, "open");
+      // Open door
+      const doorElement = document.createElement("div");
+      doorElement.className = `door door-${direction} door-open`;
+      cell.appendChild(doorElement);
     } else if (wallType === 4) {
-      cell.classList.add(`door-${direction}`, "closed");
+      // Closed door
+      const doorElement = document.createElement("div");
+      doorElement.className = `door door-${direction} door-closed`;
+      cell.appendChild(doorElement);
     }
   });
 }
@@ -536,9 +560,58 @@ function translatePhase(phase) {
 
 function translateRole(role) {
   const roles = {
-    RESCUER: "Rescuer",
-    EXTINGUISHER: "Extinguisher",
+    rescuer: "Rescuer",
+    extinguisher: "Extinguisher",
     null: "No Role",
   };
-  return roles[role] || role;
+  return roles[role] || role || "No Role";
+}
+
+// Activity Log
+let logHistory = [];
+
+function updateActivityLog(logs, roundCount) {
+  if (!logs || logs.length === 0) return;
+  
+  const logContainer = document.getElementById("activity-log");
+  
+  // Add new logs to history with round info
+  logs.forEach(log => {
+    logHistory.push({
+      ...log,
+      round: roundCount
+    });
+  });
+  
+  // Keep only last 100 log entries
+  if (logHistory.length > 100) {
+    logHistory = logHistory.slice(-100);
+  }
+  
+  // Render logs (newest first)
+  logContainer.innerHTML = "";
+  
+  // Group logs and display newest first
+  const reversedLogs = [...logHistory].reverse();
+  
+  reversedLogs.forEach((log) => {
+    const logEntry = document.createElement("div");
+    logEntry.className = `log-entry ${log.type}`;
+    
+    logEntry.innerHTML = `
+      <span class="log-round">R${log.round}</span>
+      <span class="log-message">${log.message}</span>
+    `;
+    
+    logContainer.appendChild(logEntry);
+  });
+  
+  // Scroll to top to show newest
+  logContainer.scrollTop = 0;
+}
+
+function clearActivityLog() {
+  logHistory = [];
+  const logContainer = document.getElementById("activity-log");
+  logContainer.innerHTML = '<div class="log-entry info"><span class="log-message">Log cleared</span></div>';
 }
