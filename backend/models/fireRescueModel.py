@@ -2,12 +2,12 @@ from mesa import Model
 from mesa.space import MultiGrid
 
 import numpy as np
-import random\
+import random
 
-from fireAgent import FireAgent
-from fireState import FireState
-from firefighterRole import FireFighterRole
-from poi import POI, POIType
+from models.fireAgent import FireAgent
+from models.fireState import FireState
+from models.firefighterRole import FireFighterRole
+from models.poi import POI, POIType
 
 wall_type = [0, 1, 2, 3, 4]  # 0: none, 1: wall 1hp, 2: wall 2hp, 3: open door
 # 4: closed door

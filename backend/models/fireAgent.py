@@ -3,9 +3,9 @@ import numpy as np
 import random
 import heapq
 
-from firefighterRole import FireFighterRole
-from fireState import FireState
-from poi import POIType
+from models.firefighterRole import FireFighterRole
+from models.fireState import FireState
+from models.poi import POIType
 
 class FireAgent(Agent):
     def __init__(self, unique_id, model):

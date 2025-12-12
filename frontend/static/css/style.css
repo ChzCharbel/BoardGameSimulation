@@ -1,0 +1,476 @@
+/* Estilos globales */
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f8f9fa;
+}
+
+/* Página de inicio */
+.feature-box {
+  padding: 20px;
+  text-align: center;
+  transition: transform 0.2s;
+}
+
+.feature-box:hover {
+  transform: translateY(-5px);
+}
+
+/* Tablero de juego */
+.game-board {
+  display: grid;
+  grid-template-columns: repeat(8, 60px);
+  grid-template-rows: repeat(6, 60px);
+  gap: 2px;
+  justify-content: center;
+  background-color: #222;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.cell {
+  width: 60px;
+  height: 60px;
+  border: 1px solid #444;
+  position: relative;
+  background-color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cell:hover {
+  transform: scale(1.05);
+  z-index: 10;
+}
+
+/* Estados de fuego */
+.cell.clear {
+  background-color: #f7dcc8;
+}
+
+.cell.smoke {
+  background-color: #9e9e9e;
+  background-image: radial-gradient(
+      circle at 30% 30%,
+      rgba(255, 255, 255, 0.3) 20%,
+      transparent 20%
+    ),
+    radial-gradient(
+      circle at 70% 70%,
+      rgba(255, 255, 255, 0.2) 15%,
+      transparent 15%
+    );
+}
+
+.cell.fire {
+  background: linear-gradient(45deg, #ff4444, #ff8800, #ffaa00);
+}
+
+@keyframes flicker {
+  0% {
+    background: linear-gradient(45deg, #ff4444, #ff8800, #ffaa00);
+  }
+  100% {
+    background: linear-gradient(45deg, #ff8800, #ff4444, #ffaa00);
+  }
+}
+
+/* Paredes */
+.cell.wall-top::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background-color: #8b4513;
+}
+
+.cell.wall-right::after {
+  content: "";
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background-color: #8b4513;
+}
+
+.cell.wall-bottom::before {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background-color: #8b4513;
+}
+
+.cell.wall-left::after {
+  content: "";
+  position: absolute;
+  left: -2px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background-color: #8b4513;
+}
+
+/* Puertas */
+.cell.door-top::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: 20px;
+  right: 20px;
+  height: 4px;
+  background-color: #654321;
+}
+
+.cell.door-right::after {
+  content: "";
+  position: absolute;
+  right: -2px;
+  top: 20px;
+  bottom: 20px;
+  width: 4px;
+  background-color: #654321;
+}
+
+.cell.door-bottom::before {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 20px;
+  right: 20px;
+  height: 4px;
+  background-color: #654321;
+}
+
+.cell.door-left::after {
+  content: "";
+  position: absolute;
+  left: -2px;
+  top: 20px;
+  bottom: 20px;
+  width: 4px;
+  background-color: #654321;
+}
+
+/* Agentes */
+.agent {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid #000;
+  z-index: 5;
+  font-size: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000000;
+  font-weight: bold;
+}
+
+.agent.rescuer {
+  background-color: #007bff;
+}
+
+.agent.extinguisher {
+  background-color: #dc3545;
+}
+
+.agent.knocked-out {
+  background-color: #666;
+  opacity: 0.5;
+}
+
+.agent.current {
+  border: 2px solid #ffd700;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 215, 0, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);
+  }
+}
+
+/* POIs */
+.poi {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+  z-index: 3;
+}
+
+.poi.victim {
+  background-color: #ff69b4;
+  color: #fff;
+}
+
+.poi.false {
+  background-color: #ffa500;
+  color: #000;
+}
+
+.poi.revealed {
+  border: 2px solid #000;
+}
+
+/* Estadísticas */
+.stat-box {
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 5px;
+}
+
+.stat-number {
+  font-size: 1.5em;
+  font-weight: bold;
+}
+
+.stat-label {
+  font-size: 0.8em;
+}
+
+.fire-stat {
+  padding: 8px;
+  border-radius: 4px;
+  margin-bottom: 5px;
+}
+
+/* Lista de agentes */
+.agent-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  margin-bottom: 5px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border-left: 4px solid #007bff;
+}
+
+.agent-item.current {
+  border-left-color: #ffd700;
+  background-color: #fff3cd;
+}
+
+.agent-item.knocked-out {
+  opacity: 0.6;
+  border-left-color: #6c757d;
+}
+
+.agent-id {
+  font-weight: bold;
+  color: #007bff;
+}
+
+.agent-role {
+  font-size: 0.8em;
+  color: #666;
+}
+
+.agent-ap {
+  background-color: #007bff;
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 0.7em;
+}
+
+/* Lista de POIs */
+.poi-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px;
+  margin-bottom: 3px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border-left: 3px solid #ff69b4;
+}
+
+.poi-item.false {
+  border-left-color: #ffa500;
+}
+
+.poi-item.revealed {
+  font-weight: bold;
+}
+
+/* Controles de simulación */
+.simulation-controls {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .game-board {
+    grid-template-columns: repeat(8, 45px);
+    grid-template-rows: repeat(6, 45px);
+  }
+
+  .cell {
+    width: 45px;
+    height: 45px;
+  }
+
+  .simulation-controls {
+    flex-wrap: wrap;
+  }
+}
+
+/* Animaciones de entrada */
+.fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Estado del juego */
+.game-won {
+  border: 3px solid #28a745;
+  background-color: #d4edda;
+}
+
+.game-lost {
+  border: 3px solid #dc3545;
+  background-color: #f8d7da;
+}
+
+/* Estilos técnicos para la página principal */
+.tech-feature {
+  text-align: center;
+  padding: 15px;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  transition: all 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.tech-feature:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background-color: #ffffff;
+}
+
+.emergent-property {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  transition: all 0.3s ease;
+}
+
+.emergent-property:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  border-color: #007bff;
+}
+
+/* Code highlighting improvements */
+pre {
+  background-color: #2d3748;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+pre code {
+  color: #e2e8f0;
+  font-family: "Fira Code", "Monaco", "Cascadia Code", "Roboto Mono", monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* Technical parameter lists */
+.list-unstyled li {
+  padding: 0.25rem 0;
+  border-bottom: 1px solid #f1f3f4;
+}
+
+.list-unstyled li:last-child {
+  border-bottom: none;
+}
+
+.list-unstyled li code {
+  background-color: #f8f9fa;
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  font-size: 0.875rem;
+  color: #e83e8c;
+  font-weight: 600;
+}
+
+/* Card enhancements for technical content */
+.card {
+  border: none;
+  border-radius: 12px;
+}
+
+.card-header {
+  border-radius: 12px 12px 0 0 !important;
+  font-weight: 600;
+}
+
+/* Animated icons */
+.fas,
+.fab {
+  transition: transform 0.2s ease;
+}
+
+.tech-feature:hover .fas,
+.emergent-property:hover .fas {
+  transform: scale(1.1);
+}
+
+/* Responsive improvements for technical content */
+@media (max-width: 768px) {
+  .tech-feature {
+    margin-bottom: 1rem;
+  }
+
+  pre code {
+    font-size: 0.75rem;
+  }
+
+  .card-body {
+    padding: 1rem;
+  }
+}
