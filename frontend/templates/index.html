@@ -80,8 +80,8 @@
                     <i class="fas fa-brain fa-2x text-warning mb-2"></i>
                     <h6>Intelligent Pathfinding</h6>
                     <p class="small">
-                      Dijkstra algorithm for optimal navigation through dynamic
-                      fire-affected environment
+                      Dijkstra algorithm for optimal navigation through walls,
+                      doors, and fire-affected cells
                     </p>
                   </div>
                 </div>
@@ -132,20 +132,16 @@
                     </h6>
                     <ul class="list-unstyled">
                       <li>
-                        <strong>FireRescueModel:</strong> Mesa Model class
-                        handling simulation state
+                        <strong>FireRescueModel:</strong> Mesa Model managing 8×6 grid, fire states, and game logic
                       </li>
                       <li>
-                        <strong>FireAgent:</strong> Autonomous agent with
-                        behavior trees
+                        <strong>FireAgent:</strong> 6 autonomous agents with role-based behaviors
                       </li>
                       <li>
-                        <strong>MultiGrid:</strong> Spatial environment with
-                        concurrent agent access
+                        <strong>MultiGrid:</strong> Spatial environment allowing multiple agents per cell
                       </li>
                       <li>
-                        <strong>RandomActivation:</strong> Agent scheduler for
-                        turn-based execution
+                        <strong>POI System:</strong> 10 victims + 5 false alarms with reveal mechanics
                       </li>
                     </ul>
                   </div>
@@ -156,20 +152,16 @@
                     </h6>
                     <ul class="list-unstyled">
                       <li>
-                        <strong>State Machine:</strong> Role-based behavior
-                        switching
+                        <strong>Role Assignment:</strong> Dynamic RESCUER/EXTINGUISHER switching
                       </li>
                       <li>
-                        <strong>Pathfinding:</strong> A* algorithm for
-                        navigation
+                        <strong>Pathfinding:</strong> Dijkstra algorithm for optimal navigation
                       </li>
                       <li>
-                        <strong>Decision Trees:</strong> Action prioritization
-                        logic
+                        <strong>Fire Handling:</strong> Extinguish while moving to targets
                       </li>
                       <li>
-                        <strong>Sensor Model:</strong> Environmental perception
-                        system
+                        <strong>Knockout System:</strong> 2-turn recovery when caught in fire
                       </li>
                     </ul>
                   </div>
@@ -186,33 +178,55 @@
               <div class="card-body">
                 <p>
                   Each firefighter agent implements sophisticated behavior
-                  patterns:
+                  patterns using the Mesa framework:
                 </p>
                 <pre><code class="language-python">class FireAgent(Agent):
     def __init__(self, unique_id, model):
-        super().__init__(unique_id, model)
-        self.role = None
+        super().__init__(model)
         self.action_points = 4
+        self.role = None  # RESCUER or EXTINGUISHER
+        self.target_poi = None
         self.carrying_victim = None
         self.knockout_timer = 0
+        self.max_knockout_time = 2
+        self.path = []
         
     def step(self):
-        self.assign_role()
+        self.reset_ap()  # Reset to 4 action points
+        self.update_knockout()
+        
+        if self.is_knocked_out():
+            return  # Skip turn if unconscious
+            
         if self.role == FireFighterRole.RESCUER:
             self.rescuer_behavior()
         elif self.role == FireFighterRole.EXTINGUISHER:
             self.extinguisher_behavior()
             
+        self.check_knockout()  # Check if in fire
+            
     def rescuer_behavior(self):
         if self.carrying_victim:
-            self.move_to_exit()
-        else:
-            self.search_for_victims()
+            # Navigate to nearest exit and rescue
+            target_exit = self.get_nearest_exit([(0, 2), (7, 4)])
+            self.move_with_fire_handling(target_exit)
+        elif self.target_poi:
+            # Move to POI, reveal, and pick up victim
+            self.move_with_fire_handling((self.target_poi.x, self.target_poi.y))
             
     def extinguisher_behavior(self):
-        fire_location = self.find_nearest_fire()
-        if fire_location:
-            self.move_and_extinguish(fire_location)</code></pre>
+        while self.action_points > 0:
+            target = self.find_nearest_fire()
+            if target:
+                if self.pos == target:
+                    self.extinguish_fire(target[0], target[1])
+                else:
+                    self.move_towards_target(target)
+                    
+    def djikstra(self, start, goal):
+        # Dijkstra pathfinding implementation
+        # Returns optimal path considering walls and doors
+        ...</code></pre>
               </div>
             </div>
 
@@ -227,10 +241,9 @@
                   <div class="col-md-4">
                     <div class="emergent-property text-center p-3">
                       <i class="fas fa-users-cog fa-3x text-primary mb-2"></i>
-                      <h6>Coordination</h6>
+                      <h6>Self-Organization</h6>
                       <p class="small">
-                        Agents self-organize into rescue teams without central
-                        control
+                        Agents form rescue teams based on proximity to POIs without central coordination
                       </p>
                     </div>
                   </div>
@@ -239,19 +252,18 @@
                       <i
                         class="fas fa-balance-scale fa-3x text-success mb-2"
                       ></i>
-                      <h6>Load Balancing</h6>
+                      <h6>Dynamic Role Balancing</h6>
                       <p class="small">
-                        Dynamic role distribution based on environmental demands
+                        Max 3 rescuers assigned; remaining agents become extinguishers automatically
                       </p>
                     </div>
                   </div>
                   <div class="col-md-4">
                     <div class="emergent-property text-center p-3">
                       <i class="fas fa-route fa-3x text-warning mb-2"></i>
-                      <h6>Path Optimization</h6>
+                      <h6>Adaptive Pathfinding</h6>
                       <p class="small">
-                        Collective navigation patterns emerge from individual
-                        pathfinding
+                        Agents recalculate paths dynamically as fire spreads and walls are destroyed
                       </p>
                     </div>
                   </div>
@@ -270,23 +282,34 @@
                   <div class="col-md-6">
                     <h6>Environment</h6>
                     <ul class="list-unstyled">
-                      <li><code>Grid Size:</code> 8x6 cells</li>
-                      <li><code>Fire Spread Rate:</code> Stochastic model</li>
-                      <li><code>Wall Damage:</code> Progressive destruction</li>
+                      <li><code>Grid Size:</code> 8×6 cells with walls & doors</li>
+                      <li><code>Fire States:</code> CLEAR → SMOKE → FIRE</li>
+                      <li><code>Structural Damage:</code> Max 24 before collapse</li>
                       <li>
-                        <code>Victim Placement:</code> Random distribution
+                        <code>POIs:</code> 10 victims + 5 false alarms
                       </li>
                     </ul>
                   </div>
                   <div class="col-md-6">
                     <h6>Agent Parameters</h6>
                     <ul class="list-unstyled">
+                      <li><code>Agents:</code> 6 firefighters</li>
                       <li><code>Action Points:</code> 4 per turn</li>
-                      <li><code>Vision Range:</code> Adjacent cells</li>
                       <li><code>Knockout Duration:</code> 2 turns in fire</li>
                       <li>
-                        <code>Carrying Capacity:</code> 1 victim per agent
+                        <code>Win Condition:</code> Rescue 7 victims
                       </li>
+                    </ul>
+                  </div>
+                </div>
+                <div class="row mt-3">
+                  <div class="col-12">
+                    <h6>Action Costs</h6>
+                    <ul class="list-inline">
+                      <li class="list-inline-item"><code>Move:</code> 1 AP</li>
+                      <li class="list-inline-item"><code>Open Door:</code> 1 AP</li>
+                      <li class="list-inline-item"><code>Extinguish Smoke:</code> 1 AP</li>
+                      <li class="list-inline-item"><code>Extinguish Fire:</code> 2 AP</li>
                     </ul>
                   </div>
                 </div>
